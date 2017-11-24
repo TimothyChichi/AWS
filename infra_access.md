@@ -506,6 +506,196 @@
 而官方的文件中已經描述了可以提供監控的 metrics ，如 CPU 用量， Disk 用量， Network in/out 流量等等。
 
 ---
+
+## 輸出 Template ##
+
+輸出 template 必須先知道 stack name ， stack name 可透過以下指令獲得：
+
+`$ aws cloudformation describe-stacks`
+
+輸出結果如下：
+```
+{
+    "Stacks": [
+        {
+            "StackId": "arn:aws:cloudformation:us-east-2:649047321819:stack/InterpreterTest/b773e410-ce5f-11e7-ab40-503f3144f9c5",
+            "Description": "This template is used to create your instance and security group as part of the EC2 Quickstart.",
+            "Parameters": [
+                {
+                    "ParameterValue": "InterpreterTest",
+                    "ParameterKey": "KeyName"
+                },
+                {
+                    "ParameterValue": "windows",
+                    "ParameterKey": "OperatingSystem"
+                },
+                {
+                    "ParameterValue": "ami-77765a12",
+                    "ParameterKey": "ImageId"
+                },
+                {
+                    "ParameterValue": "10.18.14.32/32",
+                    "ParameterKey": "ConnectionLocation"
+                },
+                {
+                    "ParameterValue": "3389",
+                    "ParameterKey": "SecurityGroupPort"
+                }
+            ],
+            "Tags": [
+                {
+                    "Value": "InterpreterTest",
+                    "Key": "Name"
+                }
+            ],
+            "TimeoutInMinutes": 10,
+            "CreationTime": "2017-11-21T02:00:15.323Z",
+            "StackName": "InterpreterTest",
+            "NotificationARNs": [],
+            "StackStatus": "CREATE_COMPLETE",
+            "DisableRollback": false,
+            "RollbackConfiguration": {}
+        }
+    ]
+}
+```
+而再輸入
+
+ `$ aws cloudformation get-templae --stack-name "STACK_NAME"`
+
+可獲得該 instacne template。
+
+```
+{
+    "StagesAvailable": [
+        "Original",
+        "Processed"
+    ],
+    "TemplateBody": {
+        "Description": "This template is used to create your instance and security group as part of the EC2 Quickstart.",
+        "Parameters": {
+            "ImageId": {
+                "Type": "String",
+                "Description": "The Amazon Machine Image (\"AMI\") used to start the EC2 Instance."
+            },
+            "KeyName": {
+                "ConstraintDescription": "Must be the name of an existing EC2 KeyPair.",
+                "Type": "AWS::EC2::KeyPair::KeyName",
+                "Description": "Name of an existing EC2 KeyPair to enable access to the instance"
+            },
+            "SecurityGroupPort": {
+                "Type": "String",
+                "Description": "Port number Range to be set in the Security Group ingress rules.",
+                "AllowedValues": [
+                    "22",
+                    "3389"
+                ]
+            },
+            "OperatingSystem": {
+                "Type": "String",
+                "Description": "Operating system used to select the appropriate regional Amazon Machine Image.",
+                "AllowedValues": [
+                    "amazonlinux",
+                    "redhat",
+                    "suse",
+                    "ubuntu",
+                    "windows"
+                ]
+            },
+            "ConnectionLocation": {
+                "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x.",
+                "Description": "The IP address range that can be used to connect to the EC2 instances",
+                "Default": "0.0.0.0/0",
+                "MinLength": "9",
+                "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+                "MaxLength": "18",
+                "Type": "String"
+            }
+        },
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Outputs": {},
+        "Resources": {
+            "WebServerInstance": {
+                "Type": "AWS::EC2::Instance",
+                "Properties": {
+                    "KeyName": {
+                        "Ref": "KeyName"
+                    },
+                    "SecurityGroups": [
+                        {
+                            "Ref": "WebServerSecurityGroup"
+                        }
+                    ],
+                    "InstanceType": "t2.micro",
+                    "ImageId": {
+                        "Ref": "ImageId"
+                    }
+                }
+            },
+            "WebServerSecurityGroup": {
+                "Type": "AWS::EC2::SecurityGroup",
+                "Properties": {
+                    "SecurityGroupIngress": [
+                        {
+                            "ToPort": {
+                                "Ref": "SecurityGroupPort"
+                            },
+                            "IpProtocol": "tcp",
+                            "CidrIp": {
+                                "Ref": "ConnectionLocation"
+                            },
+                            "FromPort": {
+                                "Ref": "SecurityGroupPort"
+                            }
+                        }
+                    ],
+                    "GroupDescription": "Enable connection from your IP"
+                },
+                "Metadata": {
+                    "AWS::CloudFormation::Designer": {
+                        "id": "10500b7e-e711-45fd-b299-1ad3a96cea63"
+                    }
+                }
+            }
+        },
+        "Metadata": {
+            "AWS::CloudFormation::Designer": {
+                "10500b7e-e711-45fd-b299-1ad3a96cea63": {
+                    "embeds": [],
+                    "position": {
+                        "y": 90,
+                        "x": 60
+                    },
+                    "z": 1,
+                    "size": {
+                        "width": 60,
+                        "height": 60
+                    }
+                },
+                "18a6fe4d-f426-466c-a80d-04f947569b3f": {
+                    "embeds": [],
+                    "position": {
+                        "y": 90,
+                        "x": 180
+                    },
+                    "z": 1,
+                    "ismemberof": [
+                        "10500b7e-e711-45fd-b299-1ad3a96cea63"
+                    ],
+                    "size": {
+                        "width": 60,
+                        "height": 60
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+目前還不定此 template 是否是我們需要的 deployment template ，由於範例中的 VM 只是將 windows 中上去，沒建立 LAMP server 等其他功能。
+
+---
 # Reference #
 
 [1] [AWS CLI Document](http://docs.aws.amazon.com/cli/latest/reference/)
